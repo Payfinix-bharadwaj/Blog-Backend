@@ -13,30 +13,23 @@ const chooseTopics = asyncHandler(async (request, response) => {
     throw new Error("User not found");
   }
 
-  if (user && user.selected_topics) {
-    // If selected_topics already exists, concatenate the new topics with the existing ones
-    user.selected_topics = [
-      ...user.selected_topics,
-      ...topics.map((topic) => ({
-        __v: 0,
-        _id: topic._id,
-        topic: topic.topic,
-        value: topic.value,
-        icon: topic.icon,
-        color: topic.color,
-      })),
-    ];
-  } else {
-    // If selected_topics is null or undefined, set it to the new topics array
-    user.selected_topics = topics.map((topic) => ({
+  const newTopics = topics.filter(topic => {
+    // Check if the topic is already in the selected_topics array
+    return !user.selected_topics.some(selectedTopic => selectedTopic._id.toString() === topic._id.toString());
+  });
+
+  // Add the new topics to the selected_topics array
+  user.selected_topics = [
+    ...user.selected_topics,
+    ...newTopics.map((topic) => ({
       __v: 0,
       _id: topic._id,
       topic: topic.topic,
       value: topic.value,
       icon: topic.icon,
       color: topic.color,
-    }));
-  }
+    })),
+  ];
 
   await user.save();
 
@@ -45,6 +38,9 @@ const chooseTopics = asyncHandler(async (request, response) => {
     message: "Selected topics added successfully",
   });
 });
+
+
+
 
 const updateSelectedTopics = asyncHandler(async (request, response) => {
   const { topics } = request.body;
@@ -67,7 +63,12 @@ const updateSelectedTopics = asyncHandler(async (request, response) => {
       user.selected_topics[existingTopicIndex].topic = newTopic.topic;
     } else {
       // Add the new topic to the array
-      user.selected_topics.push({ _id: newTopic._id, topic: newTopic.topic });
+      user.selected_topics.push({
+        _id: newTopic._id,
+        topic: newTopic.topic,
+        value: newTopic.value,
+        icon: newTopic.icon,
+        color: newTopic.color, });
     }
   });
 
@@ -76,6 +77,7 @@ const updateSelectedTopics = asyncHandler(async (request, response) => {
   response.status(200).json({
     success: true,
     message: "Selected topics added successfully",
+
   });
 });
 

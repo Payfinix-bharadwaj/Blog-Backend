@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const articleSchema = mongoose.Schema(
-  {
+  { 
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
@@ -13,9 +13,9 @@ const articleSchema = mongoose.Schema(
     },
     article_sub: {
       type: String,
-      required: [true, "Please add the article subtitle"],
+      // required: [true, "Please add the article subtitle"],
     },
-    article_doc: {
+    article_desc: {
       type: String,
       required: [true, "Please add the article document"],
     },
@@ -23,9 +23,9 @@ const articleSchema = mongoose.Schema(
       type: String,
       required: [true, "Please add the article topic"],
     },
-    article_cover: {
+    article_covimg: {
       type: String,
-      required: [true, "Please add the article cover"],
+      // required: [true, "Please add the article cover"],
     },
     article_views:{
         type:Number,

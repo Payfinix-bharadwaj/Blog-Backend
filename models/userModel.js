@@ -20,6 +20,10 @@ const userSchema = mongoose.Schema(
       type: String,
       required: [true, "Please add the user password"],
     },
+    bio:{
+      type:String,
+      default:"Hi, I’m Codey! I’m a web developer with in-depth experience in UI/UX design."
+    },
     profileimage:{
       type:String,
       default:"https://firebasestorage.googleapis.com/v0/b/myapp-cbe31.appspot.com/o/Avatar2.png?alt=media&token=0de8f265-809b-4593-a491-651902e7df05"
@@ -29,11 +33,12 @@ const userSchema = mongoose.Schema(
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
           topic: String,
+          color:String,
+          icon:String,
         },
       ],
       default: [],
     },
-
     post: {
       type: [
         {
@@ -60,6 +65,17 @@ const userSchema = mongoose.Schema(
         },
       ],
       default: [],
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    // Add a new field to store the formatted date
+    createdMonthYear: {
+      type: String,
+      default: function() {
+        return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
+      }
     }
   },
   {
@@ -67,16 +83,6 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// userSchema.methods.subscribe = function (user_id) {
-//   if (this.following.indexOf(user_id) === -1) {
-//     this.following.push(user_id);
-//     return this.save();
-//   }
-// };
 
-// userSchema.methods.unsubscribe = function (user_id) {
-//   this.following.remove(user_id);
-//   return this.save();
-// };
 
 module.exports = mongoose.model("User", userSchema);

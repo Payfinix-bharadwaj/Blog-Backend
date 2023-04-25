@@ -26,13 +26,11 @@ const registerUser = asyncHandler(async (request, response) => {
 
   console.log(`User created ${user}`);
   if (user) {
-    response
-      .status(200)
-      .json({
-        message: "Registered Successfully!",
-        _id: user.id,
-        email: user.email,
-      });
+    response.status(200).json({
+      message: "Registered Successfully!",
+      _id: user.id,
+      email: user.email,
+    });
   } else {
     response.status(400);
     throw new Error("User data is not valid");
@@ -71,7 +69,10 @@ const loginUser = asyncHandler(async (request, response) => {
       process.env.ACCESS_TOKEN_SECERT,
       { expiresIn: "10080m" }
     );
-    response.status(200).json({ accessToken, message: "Login Successfully!" });
+    response.status(200).json({
+      accessToken,
+      message: "Login Successfully!",
+    });
   } else {
     response.status(401);
     throw new Error("Invalid email or password");
@@ -114,7 +115,6 @@ const subscribeUser = asyncHandler(async (request, response) => {
   }
 
   user.subscribers.push(subscriber);
-
   const currentUser = await User.findById(subscriberId);
   const isAlreadyFollowing = currentUser.following.some(
     (following) => following._id.toString() === userId.toString()
@@ -136,8 +136,6 @@ const subscribeUser = asyncHandler(async (request, response) => {
   });
 });
 
-
-
 const unsubscribeUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
   const subscriberId = request.user.id;
@@ -156,7 +154,11 @@ const unsubscribeUser = asyncHandler(async (request, response) => {
   }
 
   // Remove the subscriber from the user's subscribers list
-  if (user.subscribers.some(sub => sub._id.toString() === subscriberId.toString())) {
+  if (
+    user.subscribers.some(
+      (sub) => sub._id.toString() === subscriberId.toString()
+    )
+  ) {
     user.subscribers = user.subscribers.filter(
       (sub) => sub._id.toString() !== subscriberId.toString()
     );
@@ -167,7 +169,11 @@ const unsubscribeUser = asyncHandler(async (request, response) => {
   }
 
   // Remove the user from the subscriber's following list
-  if (subscriber.following.some(follow => follow._id.toString() === userId.toString())) {
+  if (
+    subscriber.following.some(
+      (follow) => follow._id.toString() === userId.toString()
+    )
+  ) {
     subscriber.following = subscriber.following.filter(
       (follow) => follow._id.toString() !== userId.toString()
     );
@@ -183,6 +189,19 @@ const unsubscribeUser = asyncHandler(async (request, response) => {
   });
 });
 
+const profile = asyncHandler(async (request, response) => {
+  try {
+    const userId = request.user.id;
+
+    const user = await User.findById(userId).select(
+      "profileimage username name bio selected_topics createdMonthYear"
+    );
+    response.json(user);
+  } catch (err) {
+    console.error(err);
+    response.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = {
   registerUser,
@@ -190,4 +209,5 @@ module.exports = {
   currentUser,
   subscribeUser,
   unsubscribeUser,
+  profile
 };

@@ -5,6 +5,7 @@ const {
   loginUser,
   subscribeUser,
   unsubscribeUser,
+  profile
 } = require("../controllers/UserController");
 const validateToken = require("../middleware/validateTokenHandler");
 
@@ -19,5 +20,7 @@ router.get("/current", validateToken, currentUser);
 router.post("/sub", validateToken, subscribeUser);
 
 router.post("/unsub", validateToken, unsubscribeUser);
+
+router.get("/profile", validateToken, profile);
 
 module.exports = router;
