@@ -20,9 +20,11 @@ const userSchema = mongoose.Schema(
       type: String,
       required: [true, "Please add the user password"],
     },
-    bio:{
-      type:String,
-      default:"Hi, I’m Codey! I’m a web developer with in-depth experience in UI/UX design."
+    bio: {
+      type: String,
+      default: function() {
+        return `Hi, I'm ${this.name}! I'm a web developer with in-depth experience in UI/UX design.`;
+      },
     },
     profileimage:{
       type:String,
@@ -48,11 +50,12 @@ const userSchema = mongoose.Schema(
       ],
       default: [],
     },
-    subscribers: {
+    followers: {
       type: [
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
           username: String,
+          isfollowing:Boolean,
         },
       ],
       default: [],
@@ -62,6 +65,7 @@ const userSchema = mongoose.Schema(
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
           username: String,
+          isfollowing:Boolean,
         },
       ],
       default: [],

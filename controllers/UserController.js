@@ -23,6 +23,7 @@ const registerUser = asyncHandler(async (request, response) => {
     username,
     email,
     password: hashedPassword,
+    
   });
 
   console.log(`User created ${user}`);
@@ -31,6 +32,7 @@ const registerUser = asyncHandler(async (request, response) => {
       message: "Registered Successfully!",
       _id: user.id,
       email: user.email,
+      bio:user.bio,
     });
   } else {
     response.status(400);
@@ -83,15 +85,16 @@ const currentUser = asyncHandler(async (request, response) => {
   response.json(request.user);
 });
 
-const subscribeUser = asyncHandler(async (request, response) => {
+const followUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
-  const subscriberId = request.user.id;
-  const subscriberUsername = request.user.username;
+  const followerId = request.user.id;
+  const followerUsername = request.user.username;
 
   const user = await User.findById(userId);
-  const subscriber = {
-    _id: subscriberId,
-    username: subscriberUsername,
+  const follower = {
+    _id: followerId,
+    username: followerUsername,
+    isfollowing: true, // set isfollowing status to true
   };
 
   if (!user) {
@@ -99,17 +102,9 @@ const subscribeUser = asyncHandler(async (request, response) => {
     throw new Error("User not found");
   }
 
-  const isAlreadySubscribed = user.subscribers.some(
-    (subscriber) => subscriber._id.toString() === subscriberId.toString()
-  );
+  user.followers.push(follower);
 
-  if (isAlreadySubscribed) {
-    response.status(400);
-    throw new Error("You are already subscribed to this user");
-  }
-
-  user.subscribers.push(subscriber);
-  const currentUser = await User.findById(subscriberId);
+  const currentUser = await User.findById(followerId);
   const isAlreadyFollowing = currentUser.following.some(
     (following) => following._id.toString() === userId.toString()
   );
@@ -118,6 +113,7 @@ const subscribeUser = asyncHandler(async (request, response) => {
     currentUser.following.push({
       _id: userId,
       username: user.username,
+      isfollowing: true, // set isfollowing status to true
     });
     await currentUser.save();
   }
@@ -125,113 +121,101 @@ const subscribeUser = asyncHandler(async (request, response) => {
   await user.save();
 
   response.status(200).json({
-    success: true,
-    message: "You have subscribed to this user",
+    isfollowing: true,
+    message: "You have followed this user",
   });
 });
 
-const unsubscribeUser = asyncHandler(async (request, response) => {
+const unfollowUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
-  const subscriberId = request.user.id;
+  const followerId = request.user.id;
 
   const user = await User.findById(userId);
-  const subscriber = await User.findById(subscriberId);
+  const follower = await User.findById(followerId);
 
   if (!user) {
     response.status(404);
     throw new Error("User not found");
   }
 
-  if (!subscriber) {
+  if (!follower) {
     response.status(404);
-    throw new Error("Subscriber not found");
+    throw new Error("follower not found");
   }
 
-  // Remove the subscriber from the user's subscribers list
-  if (
-    user.subscribers.some(
-      (sub) => sub._id.toString() === subscriberId.toString()
-    )
-  ) {
-    user.subscribers = user.subscribers.filter(
-      (sub) => sub._id.toString() !== subscriberId.toString()
-    );
-    await user.save();
-  } else {
-    response.status(400);
-    throw new Error("You are not subscribed to this user");
-  }
+  // Remove the follower from the user's followers list
+  user.followers.some(
+    (sub) => sub._id.toString() === followerId.toString()
+  )
+ {
+  user.followers = user.followers.filter(
+    (sub) => sub._id.toString() !== followerId.toString()
+  );
+  await user.save();
+}
 
-  // Remove the user from the subscriber's following list
-  if (
-    subscriber.following.some(
-      (follow) => follow._id.toString() === userId.toString()
-    )
-  ) {
-    subscriber.following = subscriber.following.filter(
-      (follow) => follow._id.toString() !== userId.toString()
-    );
-    await subscriber.save();
-  } else {
-    response.status(400);
-    throw new Error("You are not following this user");
-  }
+
+  // Remove the user from the follower's following list
+  follower.following.some(
+    (follow) => follow._id.toString() === userId.toString()
+  )
+ {
+  follower.following = follower.following.filter(
+    (follow) => follow._id.toString() !== userId.toString()
+  );
+  await follower.save();
+} 
 
   response.status(200).json({
-    success: true,
-    message: "You have unsubscribed from this user",
+    isfollowing: false,
+    message: "You have unfollowed this user",
   });
-});
-
-const profile = asyncHandler(async (request, response) => {
-  try {
-    const userId = request.user.id;
-
-    const user = await User.findById(userId).select(
-      "profileimage username name bio selected_topics createdMonthYear"
-    );
-    response.json(user);
-  } catch (err) {
-    console.error(err);
-    response.status(500).json({ message: "Server error" });
-  }
 });
 
 const searchUsers = async (req, res) => {
   try {
-    // Extract the search query from the request body
     const { query } = req.body;
+
+    // Check if the query is empty or contains only white spaces
+    if (!query || !query.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Query!",
+      });
+    }
+
     const currentUser = await User.findById(req.user.id).populate(
       "selected_topics"
     );
     const users = await User.find({
       $or: [
-        { name: { $regex: query, $options: "" } },
-        { username: { $regex: query, $options: "" } },
-        { email: { $regex: query, $options: "" } },
+        { name: { $regex: query, $options: "i" } },
+        { username: { $regex: query, $options: "i" } },
+        
       ],
     })
-      .select({
-        password: 0,
-        email: 0,
-        __v: 0,
-        updatedAt: 0,
-        createdAt: 0,
-        subscribers: 0,
-        following: 0,
-        post: 0,
-        bio: 0,
-        createdMonthYear: 0,
-      })
+      .select("profileimage username name selected_topics")
       .exec();
     if (users.length === 0) {
-      res.status(404).json({
-        message: "No users found with the selected topics",
+      return res.status(404).json({
+        message: "No authors found!",
       });
-    }
-    const filteredUsers = users.filter(
-      (user) => user._id.toString() !== currentUser._id.toString()
-    );
+    } 
+
+    const filteredUsers = users
+      .filter((user) => user._id.toString() !== currentUser._id.toString())
+      .map((user) => {
+        const selectedTopics = user.selected_topics.map((topic) => topic.topic);
+        const isFollowing = currentUser.following.some(
+          (following) => following._id.toString() === user._id.toString()
+        );
+        return {
+          ...user.toObject(),
+          selected_topics: selectedTopics,
+          isfollowing: isFollowing,
+        };
+      });
+
     res.status(200).json(filteredUsers);
   } catch (error) {
     console.error(error);
@@ -243,8 +227,7 @@ module.exports = {
   registerUser,
   loginUser,
   currentUser,
-  subscribeUser,
-  unsubscribeUser,
-  profile,
+  followUser,
+  unfollowUser,
   searchUsers,
 };

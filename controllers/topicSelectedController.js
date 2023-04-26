@@ -88,19 +88,8 @@ const getUsersBySelectedTopics = asyncHandler(async (request, response) => {
   const currentUser = await User.findById(request.user.id).populate("selected_topics");
 
   const users = await User.find({ selected_topics: { $in: currentUser.selected_topics } })
-    .populate("selected_topics", "username")
-    .select({
-      password: 0,
-      email: 0,
-      username: 0,
-      __v: 0,
-      updatedAt: 0,
-      createdAt: 0,
-      subscribers: 0,
-      following:0,
-      post: 0,
-      selected_topics: 0,
-    });
+    .populate("username")
+    .select("profileimage name ")
 
   if (!users) {
     response.status(404).json({
@@ -109,7 +98,17 @@ const getUsersBySelectedTopics = asyncHandler(async (request, response) => {
     // throw new Error();
   }
 
-  const filteredUsers = users.filter(user => user._id.toString() !== currentUser._id.toString());
+  const filteredUsers = users
+  .filter((user) => user._id.toString() !== currentUser._id.toString())
+  .map((user) => {
+    const isFollowing = currentUser.following.some(
+      (following) => following._id.toString() === user._id.toString()
+    );
+    return {
+      ...user.toObject(),
+      isfollowing: isFollowing,
+    }; 
+  });
   response.status(200).json(filteredUsers);
 });
 

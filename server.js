@@ -15,6 +15,8 @@ app.use("/api/article", require("./routes/articleRouter"));
 app.use("/api/users", require("./routes/userRouter"));
 app.use("/api/selected", require("./routes/topicSelectedRouter"));
 app.use("/api/topic", require("./routes/topicMainRouter"));
+app.use("/api/profile", require("./routes/profileRouter"));
+app.use("/api/followunfollow", require("./routes/followUnfollowRouter"));
 
 app.use(errorHandler);
 
