@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+// const regex = new RegExp(`^${searchTerm}`, 'i');
 
 const registerUser = asyncHandler(async (request, response) => {
   const { name, username, email, password } = request.body;
@@ -55,7 +56,6 @@ const loginUser = asyncHandler(async (request, response) => {
     throw new Error("Invalid username or password");
   }
 
-  //compare password with hashedpassword
   if (user && (await bcrypt.compare(password, user.password))) {
     const accessToken = jwt.sign(
       {
@@ -82,12 +82,6 @@ const loginUser = asyncHandler(async (request, response) => {
 const currentUser = asyncHandler(async (request, response) => {
   response.json(request.user);
 });
-
-// const userFollower = asyncHandler(async (request,response) => {
-//   const user1 = await User.findById('user1Id');
-//   const user2 = await User.findById('user2Id');
-//   await user1.subscribe(user2.id);
-// })
 
 const subscribeUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
@@ -203,11 +197,54 @@ const profile = asyncHandler(async (request, response) => {
   }
 });
 
+const searchUsers = async (req, res) => {
+  try {
+    // Extract the search query from the request body
+    const { query } = req.body;
+    const currentUser = await User.findById(req.user.id).populate(
+      "selected_topics"
+    );
+    const users = await User.find({
+      $or: [
+        { name: { $regex: query, $options: "" } },
+        { username: { $regex: query, $options: "" } },
+        { email: { $regex: query, $options: "" } },
+      ],
+    })
+      .select({
+        password: 0,
+        email: 0,
+        __v: 0,
+        updatedAt: 0,
+        createdAt: 0,
+        subscribers: 0,
+        following: 0,
+        post: 0,
+        bio: 0,
+        createdMonthYear: 0,
+      })
+      .exec();
+    if (users.length === 0) {
+      res.status(404).json({
+        message: "No users found with the selected topics",
+      });
+    }
+    const filteredUsers = users.filter(
+      (user) => user._id.toString() !== currentUser._id.toString()
+    );
+    res.status(200).json(filteredUsers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   currentUser,
   subscribeUser,
   unsubscribeUser,
-  profile
+  profile,
+  searchUsers,
 };
