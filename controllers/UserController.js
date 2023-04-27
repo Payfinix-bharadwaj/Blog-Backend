@@ -23,7 +23,6 @@ const registerUser = asyncHandler(async (request, response) => {
     username,
     email,
     password: hashedPassword,
-    
   });
 
   console.log(`User created ${user}`);
@@ -32,7 +31,7 @@ const registerUser = asyncHandler(async (request, response) => {
       message: "Registered Successfully!",
       _id: user.id,
       email: user.email,
-      bio:user.bio,
+      bio: user.bio,
     });
   } else {
     response.status(400);
@@ -94,7 +93,7 @@ const followUser = asyncHandler(async (request, response) => {
   const follower = {
     _id: followerId,
     username: followerUsername,
-    isfollowing: true, // set isfollowing status to true
+    isfollowing: true,
   };
 
   if (!user) {
@@ -113,7 +112,7 @@ const followUser = asyncHandler(async (request, response) => {
     currentUser.following.push({
       _id: userId,
       username: user.username,
-      isfollowing: true, // set isfollowing status to true
+      isfollowing: true,
     });
     await currentUser.save();
   }
@@ -143,28 +142,23 @@ const unfollowUser = asyncHandler(async (request, response) => {
     throw new Error("follower not found");
   }
 
-  // Remove the follower from the user's followers list
-  user.followers.some(
-    (sub) => sub._id.toString() === followerId.toString()
-  )
- {
-  user.followers = user.followers.filter(
-    (sub) => sub._id.toString() !== followerId.toString()
-  );
-  await user.save();
-}
+  user.followers.some((sub) => sub._id.toString() === followerId.toString());
+  {
+    user.followers = user.followers.filter(
+      (sub) => sub._id.toString() !== followerId.toString()
+    );
+    await user.save();
+  }
 
-
-  // Remove the user from the follower's following list
   follower.following.some(
     (follow) => follow._id.toString() === userId.toString()
-  )
- {
-  follower.following = follower.following.filter(
-    (follow) => follow._id.toString() !== userId.toString()
   );
-  await follower.save();
-} 
+  {
+    follower.following = follower.following.filter(
+      (follow) => follow._id.toString() !== userId.toString()
+    );
+    await follower.save();
+  }
 
   response.status(200).json({
     isfollowing: false,
@@ -176,7 +170,6 @@ const searchUsers = async (req, res) => {
   try {
     const { query } = req.body;
 
-    // Check if the query is empty or contains only white spaces
     if (!query || !query.trim()) {
       return res.status(400).json({
         success: false,
@@ -191,7 +184,6 @@ const searchUsers = async (req, res) => {
       $or: [
         { name: { $regex: query, $options: "i" } },
         { username: { $regex: query, $options: "i" } },
-        
       ],
     })
       .select("profileimage username name selected_topics")
@@ -200,7 +192,7 @@ const searchUsers = async (req, res) => {
       return res.status(404).json({
         message: "No authors found!",
       });
-    } 
+    }
 
     const filteredUsers = users
       .filter((user) => user._id.toString() !== currentUser._id.toString())
@@ -223,6 +215,29 @@ const searchUsers = async (req, res) => {
   }
 };
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    const users = await User.find({})
+      .populate("username")
+      .select("username name email");
+
+    if (!users) {
+      res.status(404).json({
+        message: "No users found with the selected topics",
+      });
+    }
+    res
+      .status(200)
+      .json({
+        message: `${users.length} users fetched successfully`,
+        users: users,
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -230,4 +245,5 @@ module.exports = {
   followUser,
   unfollowUser,
   searchUsers,
+  getAllUsers,
 };

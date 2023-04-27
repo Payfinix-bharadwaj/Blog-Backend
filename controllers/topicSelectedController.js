@@ -40,8 +40,6 @@ const chooseTopics = asyncHandler(async (request, response) => {
 });
 
 
-
-
 const updateSelectedTopics = asyncHandler(async (request, response) => {
   const { topics } = request.body;
   const userId = request.user.id;
@@ -112,8 +110,28 @@ const getUsersBySelectedTopics = asyncHandler(async (request, response) => {
   response.status(200).json(filteredUsers);
 });
 
+const getSelectedTopics = asyncHandler(async (request, response) => {
+  const user = await User.findById(request.user.id);
+  if (!user) {
+    response.status(404);
+    throw new Error("User not found");
+  }
+
+  const selectedTopics = user.selected_topics.map((topic) => {
+    return {
+      id:topic.id,
+      topic: topic.topic,
+      icon: topic.icon,
+      color: topic.color,
+    };
+  });
+
+  response.status(200).json(selectedTopics);
+});
+
 module.exports = {
   chooseTopics,
   updateSelectedTopics,
   getUsersBySelectedTopics,
+  getSelectedTopics,
 };

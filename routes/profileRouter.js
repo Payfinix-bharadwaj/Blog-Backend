@@ -1,6 +1,6 @@
 const express = require("express");
 
-const {NavBarProfile} = require("../controllers/profileController")
+const { NavBarProfile } = require("../controllers/profileController");
 
 const validateToken = require("../middleware/validateTokenHandler");
 

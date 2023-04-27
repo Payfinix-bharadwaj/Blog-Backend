@@ -6,6 +6,7 @@ const {
   chooseTopics,
   updateSelectedTopics,
   getUsersBySelectedTopics,
+  getSelectedTopics,
 } = require("../controllers/topicSelectedController");
 
 const validateToken = require("../middleware/validateTokenHandler");
@@ -18,6 +19,7 @@ router.post("/", validateToken, chooseTopics);
 router.route("/update").post(updateSelectedTopics);
 
 router.get("/getuser", validateToken,getUsersBySelectedTopics);
-// router.route("/getuser").get(getUsersBySelectedTopics);
+
+router.get("/getusertopics",validateToken, getSelectedTopics);
 
 module.exports = router;

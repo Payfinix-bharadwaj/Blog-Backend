@@ -1,39 +1,45 @@
 const mongoose = require("mongoose");
 
-const articleSchema = mongoose.Schema(
-  { 
+const articleSchema = new mongoose.Schema(
+  {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User",
+      ref: "User"
     },
     article_title: {
       type: String,
-      required: [true, "Please add the article title"],
-    },
-    article_sub: {
-      type: String,
-      // required: [true, "Please add the article subtitle"],
+      required: true
     },
     article_desc: {
       type: String,
-      required: [true, "Please add the article document"],
+      required: true
     },
     article_topic: {
-      type: String,
-      required: [true, "Please add the article topic"],
+      type:String,
+      required:true
     },
-    article_covimg: {
+    article_sub: {
       type: String,
-      // required: [true, "Please add the article cover"],
+      required: false
     },
-    article_views:{
-        type:Number,
-        default:0
+    article_image: {
+      type: String,
+      required: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    createdMonthYear: {
+      type: String,
+      default: function() {
+        return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
+      }
     }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
