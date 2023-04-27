@@ -22,22 +22,21 @@ const userSchema = mongoose.Schema(
     },
     bio: {
       type: String,
-      default: function () {
+      default: function() {
         return `Hi, I'm ${this.name}! I'm a web developer with in-depth experience in UI/UX design.`;
       },
     },
-    profileimage: {
-      type: String,
-      default:
-        "https://firebasestorage.googleapis.com/v0/b/myapp-cbe31.appspot.com/o/Avatar2.png?alt=media&token=0de8f265-809b-4593-a491-651902e7df05",
+    profileimage:{
+      type:String,
+      default:"https://firebasestorage.googleapis.com/v0/b/myapp-cbe31.appspot.com/o/Avatar2.png?alt=media&token=0de8f265-809b-4593-a491-651902e7df05"
     },
     selected_topics: {
       type: [
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
           topic: String,
-          color: String,
-          icon: String,
+          color:String,
+          icon:String,
         },
       ],
       default: [],
@@ -46,20 +45,8 @@ const userSchema = mongoose.Schema(
       {
         article: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Article",
+          ref: 'Article',
           required: true,
-        },
-        article_title: {
-          type: String,
-          required: true,
-        },
-        article_sub: {
-          type: String,
-          required: false,
-        },
-        article_image: {
-          type: String,
-          required: false,
         },
         article_topic: {
           type: String,
@@ -67,7 +54,7 @@ const userSchema = mongoose.Schema(
         },
         article_create: {
           type: String,
-          required: true,
+          required:true,
         },
       },
     ],
@@ -76,40 +63,38 @@ const userSchema = mongoose.Schema(
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
           username: String,
-          isfollowing: Boolean,
+          isfollowing:Boolean,
         },
       ],
       default: [],
     },
-    following: {
+    following:{
       type: [
         {
           _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
           username: String,
-          isfollowing: Boolean,
+          isfollowing:Boolean,
         },
       ],
       default: [],
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    // Add a new field to store the formatted date
-    createdMonthYear: {
-      type: String,
-      default: function () {
-        return this.createdAt.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-      },
-    },
+    // createdAt: {
+    //   type: Date,
+    //   default: Date.now
+    // },
+    // // Add a new field to store the formatted date
+    // createdMonthYear: {
+    //   type: String,
+    //   default: function() {
+    //     return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
+    //   }
+    // }
   },
   {
     timestamps: true,
   }
 );
+
+
 
 module.exports = mongoose.model("User", userSchema);

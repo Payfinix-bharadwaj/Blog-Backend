@@ -1,46 +1,54 @@
 const mongoose = require("mongoose");
+const moment = require("moment");
 
 const articleSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User"
+      ref: "User",
+    },
+    user_name: {
+      type: String,
+      required: true,
+    },
+    user_image: {
+      type: String,
+      required: true,
     },
     article_title: {
       type: String,
-      required: true
+      required: true,
     },
     article_desc: {
       type: String,
-      required: true
+      required: true,
     },
     article_topic: {
-      type:String,
-      required:true
+      type: String,
+      required: true,
     },
     article_sub: {
       type: String,
-      required: false
+      required: false,
     },
     article_image: {
       type: String,
-      required: false
+      required: false,
     },
     createdAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
+      get: function (createdAt) {
+        return moment(createdAt).fromNow();
+      },
     },
-    createdMonthYear: {
-      type: String,
-      default: function() {
-        return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
-      }
-    }
   },
   {
-    timestamps: true
+    toJSON: { getters: true },
+    toObject: { getters: true },
   }
 );
+
 
 module.exports = mongoose.model("Article", articleSchema);

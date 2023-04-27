@@ -28,25 +28,25 @@ const createArticle = asyncHandler(async (request, response) => {
 
   const article = new Article({
     user_id: request.user.id,
+    user_name: user.name,
+    user_image: user.profileimage,
     article_title,
     article_desc,
     article_topic: article_topic[1],
     article_sub,
     article_image,
   });
-  console.log("article", article);
+  console.log(article);
 
   const post = {
     article: article._id,
     article_title: article.article_title,
-    article_sub: article.article_sub,
-    article_image: article.article_image,
     article_topic: article_topic[1],
-    article_create: article.createdMonthYear,
+    article_create: article.createdAt,
   };
   user.posts.push(post);
 
-  console.log("post", post);
+  console.log(post);
 
   if (!user.selected_topics.find((t) => t._id.equals(topic._id))) {
     user.selected_topics.push({
@@ -101,22 +101,19 @@ const DeleteArticle = asyncHandler(async (request, response) => {
 });
 
 const getLatestArticleCards = asyncHandler(async (req, res) => {
+ 
   try {
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-    const user = await User.find({
-      createdAt: { $gte: oneDayAgo },
-    })
-      .populate("posts")
-      .sort({ createdAt: -1 })
+    const articles = await Article.find({ createdAt: { $gte: oneDayAgo } })
       .select(
-        "name profileimage article_title article_sub article_image article_create"
-      );
+        "article_title article_sub article_image user_name user_image createdAt"
+      )
+      .sort({ createdAt: -1 });
 
-    res.status(200).json(user);
+    res.status(200).json(articles);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
