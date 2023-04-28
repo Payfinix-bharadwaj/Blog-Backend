@@ -226,12 +226,10 @@ const getAllUsers = asyncHandler(async (req, res) => {
         message: "No users found with the selected topics",
       });
     }
-    res
-      .status(200)
-      .json({
-        message: `${users.length} users fetched successfully`,
-        users: users,
-      });
+    res.status(200).json({
+      message: `${users.length} users fetched successfully`,
+      users: users,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });

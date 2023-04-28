@@ -101,14 +101,25 @@ const DeleteArticle = asyncHandler(async (request, response) => {
 });
 
 const getLatestArticleCards = asyncHandler(async (req, res) => {
- 
   try {
+    const currentUser = await User.findById(req.user.id);
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
     const articles = await Article.find({ createdAt: { $gte: oneDayAgo } })
       .select(
-        "article_title article_sub article_image user_name user_image createdAt"
+        "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id"
       )
       .sort({ createdAt: -1 });
+
+    for (let i = 0; i < articles.length; i++) {
+      const authorId = articles[i].user_id;
+      const author = await User.findById(authorId);
+      const isfollowing = author.followers.some(
+        (follower) => follower._id.toString() === currentUser._id.toString()
+      );
+      const currentuser = authorId.toString() === req.user.id.toString();
+      const article_count = await Article.countDocuments({ user_id: authorId });
+      articles[i] = { ...articles[i].toObject(), isfollowing, currentuser,article_count };
+    }
 
     res.status(200).json(articles);
   } catch (error) {

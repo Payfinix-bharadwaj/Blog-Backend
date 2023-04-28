@@ -17,7 +17,7 @@ router.route("/create").post(validateToken, createArticle);
 
 router.route("/get").get(getArticles);
 
-router.route("/getlatest").get(getLatestArticleCards);
+router.route("/getlatest").get(validateToken,getLatestArticleCards);
 
 router.route("/:id").get(GetArticle).put(UpdateArticle).delete(DeleteArticle);
 

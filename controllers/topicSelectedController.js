@@ -13,12 +13,12 @@ const chooseTopics = asyncHandler(async (request, response) => {
     throw new Error("User not found");
   }
 
-  const newTopics = topics.filter(topic => {
-    // Check if the topic is already in the selected_topics array
-    return !user.selected_topics.some(selectedTopic => selectedTopic._id.toString() === topic._id.toString());
+  const newTopics = topics.filter((topic) => {
+    return !user.selected_topics.some(
+      (selectedTopic) => selectedTopic._id.toString() === topic._id.toString()
+    );
   });
 
-  // Add the new topics to the selected_topics array
   user.selected_topics = [
     ...user.selected_topics,
     ...newTopics.map((topic) => ({
@@ -39,7 +39,6 @@ const chooseTopics = asyncHandler(async (request, response) => {
   });
 });
 
-
 const updateSelectedTopics = asyncHandler(async (request, response) => {
   const { topics } = request.body;
   const userId = request.user.id;
@@ -57,16 +56,15 @@ const updateSelectedTopics = asyncHandler(async (request, response) => {
     );
 
     if (existingTopicIndex > -1) {
-      // Update the value of the existing topic
       user.selected_topics[existingTopicIndex].topic = newTopic.topic;
     } else {
-      // Add the new topic to the array
       user.selected_topics.push({
         _id: newTopic._id,
         topic: newTopic.topic,
         value: newTopic.value,
         icon: newTopic.icon,
-        color: newTopic.color, });
+        color: newTopic.color,
+      });
     }
   });
 
@@ -75,38 +73,37 @@ const updateSelectedTopics = asyncHandler(async (request, response) => {
   response.status(200).json({
     success: true,
     message: "Selected topics added successfully",
-
   });
 });
 
-
-
 const getUsersBySelectedTopics = asyncHandler(async (request, response) => {
+  const currentUser = await User.findById(request.user.id).populate(
+    "selected_topics"
+  );
 
-  const currentUser = await User.findById(request.user.id).populate("selected_topics");
-
-  const users = await User.find({ selected_topics: { $in: currentUser.selected_topics } })
+  const users = await User.find({
+    selected_topics: { $in: currentUser.selected_topics },
+  })
     .populate("username")
-    .select("profileimage name ")
+    .select("profileimage name ");
 
   if (!users) {
     response.status(404).json({
-      message:"No users found with the selected topics"
+      message: "No users found with the selected topics",
     });
-    // throw new Error();
   }
 
   const filteredUsers = users
-  .filter((user) => user._id.toString() !== currentUser._id.toString())
-  .map((user) => {
-    const isFollowing = currentUser.following.some(
-      (following) => following._id.toString() === user._id.toString()
-    );
-    return {
-      ...user.toObject(),
-      isfollowing: isFollowing,
-    }; 
-  });
+    .filter((user) => user._id.toString() !== currentUser._id.toString())
+    .map((user) => {
+      const isFollowing = currentUser.following.some(
+        (following) => following._id.toString() === user._id.toString()
+      );
+      return {
+        ...user.toObject(),
+        isfollowing: isFollowing,
+      };
+    });
   response.status(200).json(filteredUsers);
 });
 
@@ -119,7 +116,7 @@ const getSelectedTopics = asyncHandler(async (request, response) => {
 
   const selectedTopics = user.selected_topics.map((topic) => {
     return {
-      id:topic.id,
+      id: topic.id,
       topic: topic.topic,
       icon: topic.icon,
       color: topic.color,

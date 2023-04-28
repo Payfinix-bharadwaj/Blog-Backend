@@ -78,17 +78,17 @@ const userSchema = mongoose.Schema(
       ],
       default: [],
     },
-    // createdAt: {
-    //   type: Date,
-    //   default: Date.now
-    // },
-    // // Add a new field to store the formatted date
-    // createdMonthYear: {
-    //   type: String,
-    //   default: function() {
-    //     return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
-    //   }
-    // }
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    // Add a new field to store the formatted date
+    createdMonthYear: {
+      type: String,
+      default: function() {
+        return this.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day:'numeric' });
+      }
+    }
   },
   {
     timestamps: true,
