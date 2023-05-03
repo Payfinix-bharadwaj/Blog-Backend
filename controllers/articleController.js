@@ -271,8 +271,11 @@ const SearchArticles = asyncHandler(async (req, res) => {
     for (let i = 0; i < articles.length; i++) {
       const authorId = articles[i].user_id;
       const author = await User.findById(authorId);
-      const isfollowing = author.followers.some(
-        (follower) => follower._id.toString() === currentUser._id.toString()
+      // const isfollowing = author.followers.some(
+      //   (follower) => follower._id.toString() === currentUser._id.toString()
+      // );
+      const isfollowing = currentUser.following.some(
+        (following) => following._id.toString() === authorId.toString()
       );
       const currentuser = authorId.toString() === req.user.id.toString();
 
