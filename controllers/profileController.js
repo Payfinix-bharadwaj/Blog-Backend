@@ -2,7 +2,25 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel")
 
 const UserProfileView = asyncHandler(async (request,response) => {
-    const userId = request.body;
+    const userId = request.user.id;
+    const user = await User.findById(userId).select(
+      "profileimage username name posts following followers"
+    );
+    const profileimg = user.profileimage;
+    const username = user.username;
+    const name = user.name;
+    const postscount = user.posts.length;
+    const followerscount = user.followers.length;
+    const followingcount = user.following.length;
+  
+    response.status(200).json({ 
+      profileimg,
+      username,
+      name,
+      postscount,
+      followerscount,
+      followingcount
+    });
 
 });
 

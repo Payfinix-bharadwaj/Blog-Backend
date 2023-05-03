@@ -166,7 +166,7 @@ const unfollowUser = asyncHandler(async (request, response) => {
   });
 });
 
-const searchUsers = async (req, res) => {
+const searchUsers = asyncHandler(async (req, res) => {
   try {
     const { query } = req.body;
 
@@ -213,7 +213,7 @@ const searchUsers = async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
-};
+});
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
