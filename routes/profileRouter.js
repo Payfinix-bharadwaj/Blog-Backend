@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { NavBarProfile,UserProfileView } = require("../controllers/profileController");
+const { NavBarProfile,UserProfileView,UpdateUserProfile } = require("../controllers/profileController");
 
 const validateToken = require("../middleware/validateTokenHandler");
 
@@ -10,5 +10,6 @@ router.get("/", validateToken, NavBarProfile);
 
 router.get("/user", validateToken, UserProfileView);
 
+router.post("/update", validateToken, UpdateUserProfile);
 
 module.exports = router;

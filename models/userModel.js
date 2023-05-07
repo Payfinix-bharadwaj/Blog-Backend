@@ -31,6 +31,29 @@ const userSchema = mongoose.Schema(
       default:
         "https://firebasestorage.googleapis.com/v0/b/myapp-cbe31.appspot.com/o/Avatar2.png?alt=media&token=0de8f265-809b-4593-a491-651902e7df05",
     },
+    profile_tagline: {
+      type: String,
+      required: true,
+    },
+    user_location: {
+      type: String,
+      required: true,
+    },
+    user_twitter: {
+      type: String,
+    },
+    user_linkedin: {
+      type: String,
+    },
+    user_github: {
+      type: String,
+    },
+    user_stack: {
+      type: String,
+    },
+    user_website: {
+      type: String,
+    },
     selected_topics: {
       type: [
         {
@@ -80,7 +103,7 @@ const userSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Article",
           },
-          isbookmarked:Boolean,
+          isbookmarked: Boolean,
         },
       ],
       default: [],
@@ -89,7 +112,6 @@ const userSchema = mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    // Add a new field to store the formatted date
     createdMonthYear: {
       type: String,
       default: function () {

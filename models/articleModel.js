@@ -39,15 +39,15 @@ const articleSchema = new mongoose.Schema(
     article_clap: {
       type: Number,
       default: 0,
-    //   get: function (value) {
-    //     const abbreviations = ['', 'K', 'M', 'B', 'T'];
-    //     const magnitude = Math.floor(Math.log10(value) / 3);
-    //     const abbreviation = abbreviations[magnitude];
-    //     const scaledValue = value / Math.pow(10, magnitude * 3);
-    //     const roundedValue = Math.round(scaledValue * 10) / 10;
-    //     return `${roundedValue}${abbreviation}`;
-    // },
-  },
+      //   get: function (value) {
+      //     const abbreviations = ['', 'K', 'M', 'B', 'T'];
+      //     const magnitude = Math.floor(Math.log10(value) / 3);
+      //     const abbreviation = abbreviations[magnitude];
+      //     const scaledValue = value / Math.pow(10, magnitude * 3);
+      //     const roundedValue = Math.round(scaledValue * 10) / 10;
+      //     return `${roundedValue}${abbreviation}`;
+      // },
+    },
     clappedBy: [
       {
         _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -63,6 +63,7 @@ const articleSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
     createdAt: {
       type: Date,
       default: Date.now,

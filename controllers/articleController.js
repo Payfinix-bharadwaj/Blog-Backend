@@ -379,7 +379,7 @@ const GetUserBookmarks = asyncHandler(async (req, res) => {
     )
     .sort({ createdAt: -1 })
     .exec();
-    
+
   for (let i = 0; i < articles.length; i++) {
     const authorId = articles[i].user_id;
     const author = await User.findById(authorId);
@@ -411,6 +411,84 @@ const GetUserBookmarks = asyncHandler(async (req, res) => {
   return res.status(200).json(articles);
 });
 
+const SearchBookMarkedArticles = asyncHandler(async (req, res) => {
+  try {
+    const { query } = req.body;
+
+    if (!query || !query.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Query!",
+      });
+    }
+
+    const currentUser = await User.findById(req.user.id).populate("bookmarks");
+
+    const bookmarks = currentUser.bookmarks.filter(
+      (bookmark) => bookmark.isbookmarked
+    );
+
+    const articleIds = bookmarks.map((bookmark) => bookmark._id);
+
+    const articles = await Article.find({
+      _id: { $in: articleIds },
+      $or: [
+        { article_topic: { $regex: query, $options: "i" } },
+        { article_title: { $regex: query, $options: "i" } },
+        { user_name: { $regex: query, $options: "i" } },
+      ],
+    })
+      .select(
+        "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id article_clap clappedBy"
+      )
+      .sort({ createdAt: -1 })
+      .exec();
+    if (articles.length === 0) {
+      return res.status(404).json({
+        message: "No authors found!",
+      });
+    }
+
+    for (let i = 0; i < articles.length; i++) {
+      const authorId = articles[i].user_id;
+      const author = await User.findById(authorId);
+      // const isfollowing = author.followers.some(
+      //   (follower) => follower._id.toString() === currentUser._id.toString()
+      // );
+      const isfollowing = currentUser.following.some(
+        (following) => following._id.toString() === authorId.toString()
+      );
+      const isbookmarked = currentUser.bookmarks.find(
+        (bookmark) => bookmark._id.toString() === articles[i]._id.toString()
+      );
+      const currentuser = authorId.toString() === req.user.id.toString();
+
+      const clappedByCurrentUser = articles[i].clappedBy.find(
+        (clapper) => clapper._id.toString() === currentUser._id.toString()
+      );
+      const isclapped = clappedByCurrentUser
+        ? clappedByCurrentUser.isclapped
+        : false;
+
+      articles[i] = {
+        ...articles[i].toObject(),
+        isfollowing,
+        isbookmarked: isbookmarked ? isbookmarked.isbookmarked : false,
+        currentuser,
+        isclapped,
+      };
+    }
+
+    res.status(200).json(articles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error!",
+    });
+  }
+});
+
 module.exports = {
   createArticle,
   GetArticle,
@@ -425,4 +503,5 @@ module.exports = {
   BookmarkArticle,
   UnBookmarkArticle,
   GetUserBookmarks,
+  SearchBookMarkedArticles,
 };

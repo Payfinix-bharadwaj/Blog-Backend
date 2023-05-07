@@ -16,6 +16,7 @@ const {
   BookmarkArticle,
   UnBookmarkArticle,
   GetUserBookmarks,
+  SearchBookMarkedArticles,
 } = require("../controllers/articleController");
 
 const validateToken = require("../middleware/validateTokenHandler");
@@ -43,8 +44,7 @@ router.route("/bookmark").post(validateToken, BookmarkArticle);
 router.route("/unbookmark").post(validateToken, UnBookmarkArticle);
 
 router.route("/getbook").post(validateToken, GetUserBookmarks);
-// router.route("/getbook").get((req,res)=>{
-//   res.json({"msg":"ok"})
-// });
+
+router.route("/searchbook").post(validateToken, SearchBookMarkedArticles);
 
 module.exports = router;
