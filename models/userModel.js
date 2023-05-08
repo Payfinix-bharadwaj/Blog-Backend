@@ -16,6 +16,10 @@ const userSchema = mongoose.Schema(
       required: [true, "Please add the  user email address"],
       unique: [true, "Email address already taken"],
     },
+    alter_email:{
+      type: String,
+      unique: [true, "Email address already taken"],
+    },
     password: {
       type: String,
       required: [true, "Please add the user password"],
@@ -33,11 +37,9 @@ const userSchema = mongoose.Schema(
     },
     profile_tagline: {
       type: String,
-      required: true,
     },
     user_location: {
       type: String,
-      required: true,
     },
     user_twitter: {
       type: String,

@@ -264,7 +264,7 @@ const SearchArticles = asyncHandler(async (req, res) => {
       .exec();
     if (articles.length === 0) {
       return res.status(404).json({
-        message: "No authors found!",
+        message: "No articles found!",
       });
     }
 

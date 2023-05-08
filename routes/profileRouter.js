@@ -10,6 +10,6 @@ router.get("/", validateToken, NavBarProfile);
 
 router.get("/user", validateToken, UserProfileView);
 
-router.post("/update", validateToken, UpdateUserProfile);
+router.put("/update", validateToken, UpdateUserProfile);
 
 module.exports = router;
