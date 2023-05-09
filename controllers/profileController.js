@@ -64,9 +64,14 @@ const UpdateUserProfile = asyncHandler(async (req, res) => {
 
 const NavBarProfile = asyncHandler(async (request, response) => {
   try {
+    const userid= request.body.userid
+    console.log(userid,"userid======================");
     const userId = request.user.id;
-
-    const user = await User.findById(userId).select(
+    // if (request.body.userId) {
+    //   userId = request.body.userId;
+    // }
+    // const users = await User.findById(userId)
+    const user = await User.findById(userid).select(
       " _id profileimage username name bio selected_topics createdMonthYear profile_tagline user_location posts followers following profile_tagline selected_topics"
     );
     const id = user._id;
@@ -82,10 +87,12 @@ const NavBarProfile = asyncHandler(async (request, response) => {
     const createdMonthYear = user.createdMonthYear;
     const user_location = user.user_location;
 
+    const currentUserId = request.user.id;
+    const isCurrentUser = currentUserId.toString() === user._id.toString();
     const isfollowing = user.following.some(
-      (following) => following._id.toString() === user._id.toString()
+      (following) => following._id.toString() === userId.toString()
     );
-    const currentuser = user.toString() === request.user.id.toString();
+    const currentuser = isCurrentUser;
 
     response.json({
       id,
