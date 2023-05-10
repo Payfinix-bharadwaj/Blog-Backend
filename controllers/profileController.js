@@ -1,6 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const Article = require("../models/articleModel");
 const bcrypt = require("bcrypt");
+const _ = require("lodash");
+const moment = require("moment");
 
 const UserProfileView = asyncHandler(async (request, response) => {
   const userId = request.user.id;
@@ -24,7 +27,9 @@ const UserProfileView = asyncHandler(async (request, response) => {
   });
 });
 
-const AuthorProfileView = asyncHandler(async (request, response) => {});
+const AuthorProfileView = asyncHandler(async (request, response) => {
+  const userId = request.user.id;
+});
 
 const UpdateUserProfile = asyncHandler(async (req, res) => {
   try {
@@ -64,17 +69,21 @@ const UpdateUserProfile = asyncHandler(async (req, res) => {
 
 const NavBarProfile = asyncHandler(async (request, response) => {
   try {
-    const userid= request.body.userid
-    console.log(userid,"userid======================");
-    const userId = request.user.id;
-    // if (request.body.userId) {
-    //   userId = request.body.userId;
-    // }
-    // const users = await User.findById(userId)
-    const user = await User.findById(userid).select(
-      " _id profileimage username name bio selected_topics createdMonthYear profile_tagline user_location posts followers following profile_tagline selected_topics"
+    let userId = request.user.id;
+
+    if (request.body.userId) {
+      userId = request.body.userId;
+    } 
+
+    const user = await User.findById(userId).select(
+      "_id profileimage username name bio selected_topics createdMonthYear profile_tagline user_location posts followers following profile_tagline selected_topics"
     );
-    const id = user._id;
+
+    if (!user) {
+      return response.status(404).json({ message: "User not found" });
+    }
+
+    const userid = user._id;
     const profileimage = user.profileimage;
     const username = user.username;
     const name = user.name;
@@ -89,13 +98,15 @@ const NavBarProfile = asyncHandler(async (request, response) => {
 
     const currentUserId = request.user.id;
     const isCurrentUser = currentUserId.toString() === user._id.toString();
-    const isfollowing = user.following.some(
-      (following) => following._id.toString() === userId.toString()
-    );
+    const isfollowing = isCurrentUser
+      ? false
+      : user.followers.some(
+          (follower) => follower._id.toString() === currentUserId.toString()
+        );
     const currentuser = isCurrentUser;
 
     response.json({
-      id,
+      userid,
       isfollowing,
       currentuser,
       profileimage,
@@ -116,9 +127,71 @@ const NavBarProfile = asyncHandler(async (request, response) => {
   }
 });
 
+// const RecentActivity = asyncHandler(async (req, res) => {
+//   try {
+//     const articles = await Article.find({ user_id: req.user.id })
+//       .select("article_title createdMonthYear article_sub user_id")
+//       .sort({ createdAt: -1 });
+
+//     const articlesByDate = moment(articles.createdMonthYear).format("MMM D");
+//     console.log("articledate", articlesByDate);
+
+//     const groupedArticles = _(articles)
+//       .groupBy("createdMonthYear")
+//       .map((articles, createdMonthYear) => ({
+//         createdMonthYear,
+//         // user_id: req.user.id, // Add user_id property here
+//         data: articles.map(({ _id, article_title }) => ({
+//           id: _id,
+//           article_title,
+//         })),
+//       }))
+//       .value();
+
+//     res.status(200).json(groupedArticles);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+const RecentActivity = asyncHandler(async (req, res) => {
+  try {
+    let userId = req.user.id;
+
+    if (req.body.userId) {
+      userId = req.body.userId;
+    }
+
+    const articles = await Article.find({ user_id: userId })
+      .select("article_title createdMonthYear article_sub user_id")
+      .sort({ createdAt: -1 });
+
+
+    const groupedArticles = _(articles)
+      .groupBy("createdMonthYear")
+      .map((articles, createdMonthYear) => ({
+        createdMonthYear,
+        // user_id: userId,
+        data: articles.map(({ _id, article_title }) => ({
+          id: _id,
+          article_title,
+        })),
+      }))
+      .value();
+
+    res.status(200).json(groupedArticles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 module.exports = {
   AuthorProfileView,
   UserProfileView,
   NavBarProfile,
   UpdateUserProfile,
+  RecentActivity,
 };

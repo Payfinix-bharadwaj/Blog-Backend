@@ -17,6 +17,7 @@ const {
   UnBookmarkArticle,
   GetUserBookmarks,
   SearchBookMarkedArticles,
+  FilterArticles,
 } = require("../controllers/articleController");
 
 const validateToken = require("../middleware/validateTokenHandler");
@@ -29,7 +30,11 @@ router.route("/get").get(getArticles);
 
 router.route("/getlatest").get(validateToken, getLatestArticleCards);
 
-router.route("/:id").get(GetArticle).put(UpdateArticle).delete(DeleteArticle);
+router.route("/").post(validateToken,GetArticle);
+
+router.route("/delete").delete(DeleteArticle);
+
+router.route("/updatearticle").put(UpdateArticle);
 
 router.route("/clap").post(validateToken, clapArticle);
 
@@ -44,6 +49,8 @@ router.route("/bookmark").post(validateToken, BookmarkArticle);
 router.route("/unbookmark").post(validateToken, UnBookmarkArticle);
 
 router.route("/getbook").post(validateToken, GetUserBookmarks);
+
+router.route("/filter").post(validateToken, FilterArticles);
 
 router.route("/searchbook").post(validateToken, SearchBookMarkedArticles);
 

@@ -61,28 +61,79 @@ const createArticle = asyncHandler(async (request, response) => {
     .json({ status: true, message: "Article created successfully!" });
 });
 
-const GetArticle = asyncHandler(async (request, response) => {
-  const article = await Article.findById(request.params.id);
-  if (!article) {
-    response.status(404);
-    throw new Error("Article not found");
+const GetArticle = asyncHandler(async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const currentUser = await User.findById(req.user.id);
+    const article = await Article.findById(articleId)
+      .select(
+        "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id article_clap clappedBy"
+      )
+      .populate("user_id", ["profileimage", "name"]);
+
+    const articleUser = await User.findById(article.user_id._id);
+
+    const isfollowing = articleUser.following.some(
+      (follower) => follower._id.toString() === currentUser.id.toString()
+    );
+
+    const isbookmarked = currentUser.bookmarks.find(
+      (bookmark) => bookmark._id.toString() === article._id.toString()
+    );
+
+    const clappedByCurrentUser = article.clappedBy.find(
+      (clapper) => clapper._id.toString() === currentUser.id.toString()
+    );
+    const isclapped = clappedByCurrentUser
+      ? clappedByCurrentUser.isclapped
+      : false;
+
+    const user_image = articleUser.profileimage;
+    const user_name = articleUser.name;
+    const currentuser =
+      articleUser._id.toString() === currentUser.id.toString();
+
+    const articleWithDetails = {
+      ...article.toObject(),
+      isfollowing,
+      isbookmarked: isbookmarked ? isbookmarked.isbookmarked : false,
+      currentuser,
+      isclapped,
+      user_image,
+      user_name,
+    };
+
+    res.status(200).json(articleWithDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
-  response.status(200).json(article);
-  response
-    .status(200)
-    .json({ article, message: `Got Article for ${request.params.id}` });
 });
 
-const UpdateArticle = asyncHandler(async (request, response) => {
-  console.log("The request body:", request.body);
-  const { user_id } = request.body;
-  if (!user_id) {
-    response.status(400);
-    throw new Error("Article Id are Mandatory!");
+const UpdateArticle = asyncHandler(async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const updates = req.body;
+    const article = await Article.findById(articleId);
+    if (!article) {
+      res.status(404);
+      throw new Error("Article not found");
+    }
+
+    const updatedArticle = await Article.findByIdAndUpdate(articleId, updates, {
+      new: true,
+      runValidators: true,
+    });
+    res.json(updatedArticle);
+
+    if (!updatedArticle) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-  response
-    .status(200)
-    .json({ message: `Updated Article for ${request.params.id}` });
 });
 
 const DeleteArticle = asyncHandler(async (request, response) => {
@@ -105,11 +156,14 @@ const getLatestArticleCards = asyncHandler(async (req, res) => {
       .select(
         "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id article_clap clappedBy"
       )
+      .populate("user_id", ["profileimage", "name"])
       .sort({ createdAt: -1 });
 
     for (let i = 0; i < articles.length; i++) {
-      const authorId = articles[i].user_id;
+      const authorId = articles[i].user_id._id;
       const author = await User.findById(authorId);
+      const user_image = author.profileimage;
+      const user_name = author.name;
       const isfollowing = author.followers.some(
         (follower) => follower._id.toString() === currentUser._id.toString()
       );
@@ -117,7 +171,7 @@ const getLatestArticleCards = asyncHandler(async (req, res) => {
         (bookmark) => bookmark._id.toString() === articles[i]._id.toString()
       );
 
-      const currentuser = authorId.toString() === req.user.id.toString();
+      const currentuser = authorId.toString() === currentUser._id.toString();
 
       const clappedByCurrentUser = articles[i].clappedBy.find(
         (clapper) => clapper._id.toString() === currentUser._id.toString()
@@ -132,6 +186,8 @@ const getLatestArticleCards = asyncHandler(async (req, res) => {
         isbookmarked: isbookmarked ? isbookmarked.isbookmarked : false,
         currentuser,
         isclapped,
+        user_image,
+        user_name,
       };
     }
 
@@ -218,13 +274,11 @@ const updateArticleViews = asyncHandler(async (req, res) => {
   try {
     const { article_id, user_id } = req.body;
 
-    // Check if the user has already viewed this article
     const article = await Article.findById(article_id);
     if (article.article_views.includes(user_id)) {
       return res.status(400).json({ error: "Article already viewed" });
     }
 
-    // Update the article views count and add the user to the article views list
     article.article_views.push(user_id);
     article.save();
 
@@ -261,6 +315,7 @@ const SearchArticles = asyncHandler(async (req, res) => {
         "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id article_clap clappedBy"
       )
       .sort({ createdAt: -1 })
+      .populate("user_id", ["profileimage", "name"])
       .exec();
     if (articles.length === 0) {
       return res.status(404).json({
@@ -269,8 +324,10 @@ const SearchArticles = asyncHandler(async (req, res) => {
     }
 
     for (let i = 0; i < articles.length; i++) {
-      const authorId = articles[i].user_id;
+      const authorId = articles[i].user_id._id;
       const author = await User.findById(authorId);
+      const user_image = author.profileimage;
+      const user_name = author.name;
       // const isfollowing = author.followers.some(
       //   (follower) => follower._id.toString() === currentUser._id.toString()
       // );
@@ -291,6 +348,8 @@ const SearchArticles = asyncHandler(async (req, res) => {
         isfollowing,
         currentuser,
         isclapped,
+        user_image,
+        user_name,
       };
     }
 
@@ -375,14 +434,17 @@ const GetUserBookmarks = asyncHandler(async (req, res) => {
     _id: { $in: bookmarkedArticleIds },
   })
     .select(
-      "article_title article_sub article_image article_desc article_topic user_name user_image createdAt user_id article_clap clappedBy"
+      "article_title article_sub article_image article_desc article_topic createdAt user_id article_clap clappedBy"
     )
+    .populate("user_id", ["profileimage", "name"])
     .sort({ createdAt: -1 })
     .exec();
 
   for (let i = 0; i < articles.length; i++) {
-    const authorId = articles[i].user_id;
+    const authorId = articles[i].user_id._id;
     const author = await User.findById(authorId);
+    const user_image = author.profileimage;
+    const user_name = author.name;
     const isfollowing = author.followers.some(
       (follower) => follower._id.toString() === currentUser._id.toString()
     );
@@ -405,6 +467,8 @@ const GetUserBookmarks = asyncHandler(async (req, res) => {
       isbookmarked: isbookmarked ? isbookmarked.isbookmarked : false,
       currentuser,
       isclapped,
+      user_image,
+      user_name,
     };
   }
 
@@ -489,6 +553,56 @@ const SearchBookMarkedArticles = asyncHandler(async (req, res) => {
   }
 });
 
+const FilterArticles = asyncHandler(async (req, res) => {
+  try {
+    const { article_topic } = req.body;
+    const currentUser = await User.findById(req.user.id);
+    const articles = await Article.find({ article_topic })
+      .select(
+        "article_title article_sub article_image article_desc article_topic createdAt user_id article_clap clappedBy"
+      )
+      .populate("user_id", ["profileimage", "name"])
+      .sort({ createdAt: -1 })
+      .exec();
+
+    for (let i = 0; i < articles.length; i++) {
+      const authorId = articles[i].user_id._id;
+      const author = await User.findById(authorId);
+      const user_image = author.profileimage;
+      const user_name = author.name;
+      const isfollowing = author.followers.some(
+        (follower) => follower._id.toString() === currentUser._id.toString()
+      );
+      const isbookmarked = currentUser.bookmarks.find(
+        (bookmark) => bookmark._id.toString() === articles[i]._id.toString()
+      );
+
+      const currentuser = authorId.toString() === req.user.id.toString();
+
+      const clappedByCurrentUser = articles[i].clappedBy.find(
+        (clapper) => clapper._id.toString() === currentUser._id.toString()
+      );
+      const isclapped = clappedByCurrentUser
+        ? clappedByCurrentUser.isclapped
+        : false;
+
+      articles[i] = {
+        ...articles[i].toObject(),
+        isfollowing,
+        isbookmarked: isbookmarked ? isbookmarked.isbookmarked : false,
+        currentuser,
+        isclapped,
+        user_image,
+        user_name,
+      };
+    }
+
+    res.status(200).json(articles);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 module.exports = {
   createArticle,
   GetArticle,
@@ -504,4 +618,5 @@ module.exports = {
   UnBookmarkArticle,
   GetUserBookmarks,
   SearchBookMarkedArticles,
+  FilterArticles,
 };

@@ -71,6 +71,9 @@ const articleSchema = new mongoose.Schema(
         return moment(createdAt).fromNow();
       },
     },
+    createdMonthYear: {
+      type: String,
+    },
     updatedAt: {
       type: Date,
       default: Date.now,
@@ -84,5 +87,15 @@ const articleSchema = new mongoose.Schema(
     toObject: { getters: true },
   }
 );
+
+articleSchema.pre("save", function (next) {
+  const currentDate = new Date();
+  const monthYear = currentDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  this.createdMonthYear = monthYear;
+  next();
+});
 
 module.exports = mongoose.model("Article", articleSchema);
