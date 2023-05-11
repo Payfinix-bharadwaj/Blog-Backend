@@ -18,7 +18,7 @@ const userSchema = mongoose.Schema(
     },
     alter_email:{
       type: String,
-      unique: [true, "Email address already taken"],
+      // unique: [true, "Email address already taken"],
     },
     password: {
       type: String,
